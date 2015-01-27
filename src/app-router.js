@@ -10,9 +10,6 @@
   AppRouter.util = utilities;
 
   // <app-route path="/path" [import="/page/cust-el.html"] [element="cust-el"] [template]></app-route>
-  document.registerElement('app-route', {
-    prototype: Object.create(HTMLElement.prototype)
-  });
 
   // Initial set up when attached
   AppRouter.attachedCallback = function() {
@@ -375,7 +372,9 @@
 
   // scroll to the element with id="hash" or name="hash"
   function scrollToHash(hash) {
-    if (!hash) return;
+    if (!hash) {
+      return;
+    }
 
     // wait for the browser's scrolling to finish before we scroll to the hash
     // ex: http://example.com/#/page1#middle
@@ -502,7 +501,7 @@
     }
 
     // recursively test if the segments match (start at 1 because 0 is always an empty string)
-    return segmentsMatch(routePath.split('/'), 1, urlPath.split('/'), 1)
+    return segmentsMatch(routePath.split('/'), 1, urlPath.split('/'), 1);
   };
 
   // segmentsMatch(routeSegments, routeIndex, urlSegments, urlIndex, pathVariables)
@@ -559,7 +558,7 @@
       if (routePath.charAt(0) !== '/') {
         routePath = '/**/' + routePath;
       }
-    
+
       // get path variables
       // urlPath '/customer/123'
       // routePath '/customer/:id'
@@ -632,8 +631,6 @@
     return new RegExp(pattern, options).test(value);
   };
 
-  document.registerElement('app-router', {
-    prototype: AppRouter
-  });
+  Polymer(AppRouter);
 
 })(window, document);
