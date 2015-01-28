@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title></title>
+  <link rel="import" href="app-router.html">
+  <!--<link rel="import" href="app-router.polymer.html">-->
+</head>
+<body>
+
+  <app-router mode="hash" trailingSlash="ignore">
+    <app-route path="ddd/">
+      <template>ddd</template>
+    </app-route>
+    <app-route path="fff">
+      <template>fff</template>
+    </app-route>
+    <app-route path="freelancer/:idd/*">
+      <template>
+        <span>
+          freelancer {{id}}
+          <app-router>
+            <app-route path="services/:service">
+              <template>services</template>
+            </app-route>
+            <app-route path="info">
+              <template>info</template>
+            </app-route>
+            <app-route path="*">
+              <template>
+                <div>
+                  <a href="#/freelancer/22dd43cvwe/services">services</a><br/>
+                  <a href="#/freelancer/22dd43cvwe/info">info</a>
+                </div>
+              </template>
+            </app-route>
+          </app-router>
+        </span>
+      </template>
+    </app-route>
+    <app-route path="jjj/*">
+      <template>
+        jjj
+      </template>
+    </app-route>
+    <app-route path="*">
+      <template>
+        home
+      </template>
+    </app-route>
+  </app-router>
+
+<br/>
+<a href="#">home</a>
+<br/>
+<a href="#/ddd">ddd</a>
+<br/>
+<a href="#/fff">fff</a>
+<br/>
+<a href="#/freelancer/22dd43cvwe/">freelancer</a>
+<br/>
+<a href="#/freelancer/22dd43cvwe/services/">freelancer - all services</a>
+<br/>
+<a href="#/freelancer/22dd43cvwe/services/4454">freelancer - custom service</a>
+<br/>
+</body>
+</html>

@@ -10,13 +10,139 @@
   AppRouter.util = utilities;
 
   // <app-route path="/path" [import="/page/cust-el.html"] [element="cust-el"] [template]></app-route>
+  var AppRouteItem = Object.create(HTMLElement.prototype);
+  AppRouteItem.util = utilities;
+
+  AppRouteItem.attachedCallback = function() {
+    this._defineHostRouter();
+  };
+
+  AppRouteItem._defineHostRouter = function() {
+    var hostRouter;
+    var parents = utilities.getParents(this);
+    for (var i = 0; i < parents.length; i++) {
+      var parent = parents[i];
+      if (parent.tagName == "APP-ROUTER") {
+        hostRouter = parent;
+        break;
+      }
+    }
+
+    this._hostRouter = hostRouter;
+  };
+
+  AppRouteItem.isMatchUrl = function(urlPath) {
+    return this.getUrlFullMatch(urlPath) != null;
+  };
+
+  AppRouteItem._isFromRoot = function() {
+  	return this.getAttribute('path').substr(0, 1) === "/";
+  };
+
+  AppRouteItem.getUrlFullMatch = function(urlPath) {
+    urlPath = utilities.normalizePath(urlPath, false);
+    var parentMatchPart = "";
+    if (!this._isFromRoot()) {
+      if (this._hostRouter) {
+        parentMatchPart = this._hostRouter.getUrlFullMatch(urlPath);
+      }
+      if (parentMatchPart == null) {
+        return null;
+      }
+      parentMatchPart = utilities.normalizePath(parentMatchPart, false);
+    }
+
+    urlPath = urlPath.substr(parentMatchPart.length);
+
+    var match = this.getUrlMatch(urlPath);
+    return match == null ? null : parentMatchPart + match;
+  };
+
+  AppRouteItem.getUrlMatch = function(urlPath) {
+    var routePath = this.getAttribute('path');
+    var trailingSlashOption = this._hostRouter.getAttribute('trailingSlash');
+    var isRegExp = this._hostRouter.hasAttribute('regex');
+
+    urlPath = utilities.normalizePath(urlPath, trailingSlashOption === 'ignore');
+    routePath = utilities.normalizePath(routePath, trailingSlashOption === 'ignore' && !isRegExp);
+
+    // test regular expressions
+    if (isRegExp) {
+      // TODO: return url-part, not boolean
+      return utilities.testRegExString(routePath, urlPath);
+    }
+
+    // if the urlPath is '*' then the route is a match
+    if (routePath === '*') {
+      return urlPath;
+    }
+
+    var routeParts = routePath.split("/");
+    var urlParts = urlPath.split("/");
+
+    var isMatch = true;
+    var matchParts = [];
+    for (var i = 0; i < routeParts.length; i++) {
+      var rPart = routeParts[i];
+      var uPart = urlParts[i];
+
+      if (rPart == uPart) {
+        matchParts.push(uPart);
+        continue;
+      }
+      if (rPart.substr(0, 1) === ":") {
+        matchParts.push(uPart);
+        continue;
+      }
+      if (rPart.substr(0, 1) === "*") {
+        break;
+      }
+      isMatch = false;
+    }
+
+    return isMatch ? matchParts.join("/") : null;
+  };
+
+  AppRouteItem.substractSelfUrlPart = function(url) {
+  	var part = this.getUrlPart(url);
+    return url.substr(part.length);
+  };
+
+  AppRouteItem.getUrlPart = function(url) {
+
+  };
 
   // Initial set up when attached
   AppRouter.attachedCallback = function() {
+    this._defineParentRoute();
     // init="auto|manual"
     if(this.getAttribute('init') !== 'manual') {
       this.init();
     }
+  };
+
+  AppRouter._defineParentRoute = function() {
+    var parentRoute;
+    var parents = utilities.getParents(this);
+    for (var i = 0; i < parents.length; i++) {
+      var parent = parents[i];
+      if (parent.tagName == "APP-ROUTE") {
+        parentRoute = parent;
+        break;
+      }
+    }
+
+    this._parentRoute = parentRoute;
+  };
+
+  AppRouter.getUrlFullMatch = function(urlPath) {
+    urlPath = urlPath != null ? urlPath : this.parseUrl().path;
+  	return this._parentRoute ? this._parentRoute.getUrlFullMatch(urlPath) : "";
+  };
+
+  AppRouter.parseUrl = function(url) {
+  	url = url != null ? url : window.location.href;
+    return utilities.parseUrl(url, this.getAttribute('mode'));
   };
 
   // Initialize the router
@@ -89,7 +215,9 @@
     }
 
     // load the web component for the current route
-    stateChange(router);
+    setTimeout(function() {
+      stateChange(router);
+    }, 0);
   };
 
   // clean up global event listeners
@@ -157,7 +285,7 @@
 
   // Find the first <app-route> that matches the current URL and change the active route
   function stateChange(router) {
-    var url = utilities.parseUrl(window.location.href, router.getAttribute('mode'));
+    var url = router.parseUrl();
 
     // don't load a new route if only the hash fragment changed
     if (url.hash !== previousUrl.hash && url.path === previousUrl.path && url.search === previousUrl.search && url.isHashPath === previousUrl.isHashPath) {
@@ -177,7 +305,7 @@
     // find the first matching route
     var route = router.firstElementChild;
     while (route) {
-      if (route.tagName === 'APP-ROUTE' && utilities.testRoute(route.getAttribute('path'), url.path, router.getAttribute('trailingSlash'), route.hasAttribute('regex'))) {
+      if (route.tagName === 'APP-ROUTE' && route.isMatchUrl(url.path)) {
         activateRoute(router, route, url);
         return;
       }
@@ -206,6 +334,17 @@
       return;
     }
 
+    var model = createModel(router, route, url, eventDetail);
+    route.model = model;
+    // Update model instead of re-rendering if we're on the same route
+    if (router.activeRoute && router.activeRoute === route && route.firstElementChild) {
+      for (var property in model) {
+        if (model.hasOwnProperty(property)) {
+          route.firstElementChild[property] = model[property];
+        }
+      }
+      return;
+    }
     // update the references to the activeRoute and previousRoute. if you switch between routes quickly you may go to a
     // new route before the previous route's transition animation has completed. if that's the case we need to remove
     // the previous route's content before we replace the reference to the previous route.
@@ -631,6 +770,41 @@
     return new RegExp(pattern, options).test(value);
   };
 
-  Polymer(AppRouter);
+  utilities.getParents = function(target, _list) {
+    _list = _list || [];
+    var parent;
+    if (target.nodeType == 11) {
+      // going through shadow dom
+      parent = target.host;
+    } else {
+      parent = target.parentNode;
+    }
+
+    if (!parent) {
+      return _list;
+    } else {
+      _list.push(parent);
+      return utilities.getParents(parent, _list);
+    }
+  };
+
+  utilities.normalizePath = function(urlPath, addTrailingSlash) {
+    if (urlPath.substr(0, 1) === "/") {
+      urlPath = urlPath.substr(1);
+    }
+    if (addTrailingSlash) {
+      if(urlPath.slice(-1) !== '/') {
+        urlPath += "/";
+      }
+    }
+    return urlPath;
+  };
+
+  document.registerElement('app-route', {
+    prototype: AppRouteItem
+  });
+  document.registerElement('app-router', {
+    prototype: AppRouter
+  });
 
 })(window, document);
