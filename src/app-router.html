@@ -1,2 +1,10 @@
 <!-- Copyright (C) 2015 Erik Ringsmuth - MIT license -->
 <script type="text/javascript" src="app-router.js"></script>
+<script>
+  document.registerElement('app-route', {
+    prototype: window.__AppRouterConstructors[1]
+  });
+  document.registerElement('app-router', {
+    prototype: window.__AppRouterConstructors[0]
+  });
+</script>

@@ -31,6 +31,15 @@ gulp.task('minify', function() {
     .pipe(gulp.dest('.'));
 });
 
+gulp.task('minify-polymer', function() {
+  return gulp.src('src/app-router.polymer.html')
+    //.pipe(inline({
+    //  base: 'src',
+    //  js: uglify()
+    //}))
+    .pipe(gulp.dest('.'));
+});
+
 gulp.task('test', function() {
   return gulp.src(files)
     .pipe(karma({

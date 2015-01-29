@@ -1,5 +1,5 @@
 // @license Copyright (C) 2015 Erik Ringsmuth - MIT license
-(function(window, document) {
+(function (window, document) {
   var utilities = {};
   var importedURIs = {};
   var isIE = 'ActiveXObject' in window;
@@ -322,6 +322,13 @@
       return;
     }
 
+    if (router.activeRoute == route) {
+      var oldUrl = route.currentUrl;
+       if (route.getUrlFullMatch(oldUrl.path) == route.getUrlFullMatch(url.path)){
+         return;
+       }
+    }
+
     var eventDetail = {
       path: url.path,
       route: route,
@@ -338,12 +345,14 @@
     route.model = model;
     // Update model instead of re-rendering if we're on the same route
     if (router.activeRoute && router.activeRoute === route && route.firstElementChild) {
-      for (var property in model) {
-        if (model.hasOwnProperty(property)) {
-          route.firstElementChild[property] = model[property];
+      if (route.hasAttribute('element')) {
+        for (var property in model) {
+          if (model.hasOwnProperty(property)) {
+            route.firstElementChild[property] = model[property];
+          }
         }
+        return;
       }
-      return;
     }
     // update the references to the activeRoute and previousRoute. if you switch between routes quickly you may go to a
     // new route before the previous route's transition animation has completed. if that's the case we need to remove
@@ -357,6 +366,7 @@
     router.previousRoute = router.activeRoute;
     router.activeRoute = route;
     router.activeRoute.setAttribute('active', 'active');
+    router.activeRoute.currentUrl = url;
 
     // import custom element or template
     if (route.hasAttribute('import')) {
@@ -800,11 +810,6 @@
     return urlPath;
   };
 
-  document.registerElement('app-route', {
-    prototype: AppRouteItem
-  });
-  document.registerElement('app-router', {
-    prototype: AppRouter
-  });
-
+  window.__AppRouterConstructors = [AppRouter, AppRouteItem];
 })(window, document);
+
