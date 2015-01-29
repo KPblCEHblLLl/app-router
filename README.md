@@ -1,3 +1,6 @@
+## !!!NO BACKWARD COMPABILITY!!!
+## !!!ANY BREAKING CHANGES POSSIBLE!!!
+
 ## Router for Web Components
 > Works with [Polymer](http://www.polymer-project.org/), [X-Tag](http://www.x-tags.org/), and natively.
 >
