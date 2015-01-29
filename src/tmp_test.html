@@ -32,6 +32,8 @@
     <app-route path="freelancer/:idd/*">
       <template>
         <div>
+          <app-router-link href="./ddd">ddd</app-router-link>
+          <br/>
           freelancer {{idd}}
           <app-router>
             <app-route path="services/:service">
@@ -52,8 +54,9 @@
             <app-route path="*">
               <template>
                 <div>
-                  <a href="#/freelancer/22dd43cvwe/services">services</a><br/>
-                  <a href="#/freelancer/22dd43cvwe/info">info</a>
+                  <app-router-link href="services">services</app-router-link><br/>
+                  <app-router-link href="info">info</app-router-link><br/>
+                  <app-router-link href="/">home</app-router-link><br/>
                 </div>
               </template>
             </app-route>

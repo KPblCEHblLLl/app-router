@@ -11,40 +11,44 @@
 
   // <app-route path="/path" [import="/page/cust-el.html"] [element="cust-el"] [template]></app-route>
   var AppRouteItem = Object.create(HTMLElement.prototype);
-  AppRouteItem.util = utilities;
+
+  // <app-route path="/path" [import="/page/cust-el.html"] [element="cust-el"] [template]></app-route>
+  var AppRouterLink = Object.create(HTMLElement.prototype);
 
   AppRouteItem.attachedCallback = function() {
-    this._defineHostRouter();
+    this._defineParentRouter();
   };
 
-  AppRouteItem._defineHostRouter = function() {
-    var hostRouter;
+  AppRouteItem._defineParentRouter = function() {
+    var parentRouter;
     var parents = utilities.getParents(this);
     for (var i = 0; i < parents.length; i++) {
       var parent = parents[i];
       if (parent.tagName == "APP-ROUTER") {
-        hostRouter = parent;
+        parentRouter = parent;
         break;
       }
     }
 
-    this._hostRouter = hostRouter;
+    this.parentRouter = parentRouter;
   };
 
   AppRouteItem.isMatchUrl = function(urlPath) {
     return this.getUrlFullMatch(urlPath) != null;
   };
 
-  AppRouteItem._isFromRoot = function() {
-  	return this.getAttribute('path').substr(0, 1) === "/";
+  AppRouteItem._isFromRoot = function(urlPath) {
+    urlPath = urlPath || this.getAttribute('path');
+  	return urlPath.substr(0, 1) === "/";
   };
 
   AppRouteItem.getUrlFullMatch = function(urlPath) {
+    urlPath = urlPath != null ? urlPath : this.parentRouter.parseUrl().path;
     urlPath = utilities.normalizePath(urlPath, false);
     var parentMatchPart = "";
     if (!this._isFromRoot()) {
-      if (this._hostRouter) {
-        parentMatchPart = this._hostRouter.getUrlFullMatch(urlPath);
+      if (this.parentRouter) {
+        parentMatchPart = this.parentRouter.getUrlFullMatch(urlPath);
       }
       if (parentMatchPart == null) {
         return null;
@@ -60,8 +64,8 @@
 
   AppRouteItem.getUrlMatch = function(urlPath) {
     var routePath = this.getAttribute('path');
-    var trailingSlashOption = this._hostRouter.getAttribute('trailingSlash');
-    var isRegExp = this._hostRouter.hasAttribute('regex');
+    var trailingSlashOption = this.parentRouter.getAttribute('trailingSlash');
+    var isRegExp = this.parentRouter.hasAttribute('regex');
 
     urlPath = utilities.normalizePath(urlPath, trailingSlashOption === 'ignore');
     routePath = utilities.normalizePath(routePath, trailingSlashOption === 'ignore' && !isRegExp);
@@ -103,13 +107,58 @@
     return isMatch ? matchParts.join("/") : null;
   };
 
-  AppRouteItem.substractSelfUrlPart = function(url) {
-  	var part = this.getUrlPart(url);
-    return url.substr(part.length);
+  AppRouteItem.getRedirectUrl = function(urlPath) {
+    var redirectUrl = this.getAttribute('redirect');
+    var parentMatchPart = "";
+    if (!this._isFromRoot(redirectUrl)) {
+      if (this.parentRouter) {
+        parentMatchPart = this.parentRouter.getUrlFullMatch(urlPath);
+      }
+      parentMatchPart = utilities.normalizePath(parentMatchPart, true);
+    }
+    return parentMatchPart + redirectUrl;
   };
 
-  AppRouteItem.getUrlPart = function(url) {
+  AppRouteItem.getLinkHref = function(href) {
+    var router;
+    if (href.substr(0, 1) === "/") {
+      router = this.getBaseRouter();
+      href = href.substr(1);
+    } else if (href.substr(0, 2) === "./" || href.substr(0, 3) === "../") {
+      var split = href.match(/^((\.\/|\.\.\/)*)(.+)$/);
+      href = split[3];
+      var routeShift = split[1];
+      router = this.getRouterByHref(routeShift);
+    } else {
+      router = this.parentRouter;
+    }
 
+    return router.createHref(href);
+  };
+
+  AppRouteItem.getRouterByHref = function(href, router) {
+    if (href.substr(0, 2) === "./") {
+      router = router || this.parentRouter;
+      href = href.substr(2);
+    } else if (href.substr(0, 3) === "../") {
+      router = (router || this.parentRouter).getParentRouter() || router;
+      href = href.substr(3);
+    } else {
+      return router;
+    }
+    return this.getRouterByHref(href, router);
+  };
+
+  AppRouteItem.getBaseRouter = function() {
+    var router = this.parentRouter;
+    while(true) {
+      var nextRouter = router.getParentRouter();
+      if (!nextRouter) {
+        break;
+      }
+      router = nextRouter;
+    }
+    return router;
   };
 
   // Initial set up when attached
@@ -132,17 +181,26 @@
       }
     }
 
-    this._parentRoute = parentRoute;
+    this._hostRoute = parentRoute;
+  };
+
+  AppRouter.getParentRouter = function() {
+  	return this._hostRoute && this._hostRoute.parentRouter;
   };
 
   AppRouter.getUrlFullMatch = function(urlPath) {
     urlPath = urlPath != null ? urlPath : this.parseUrl().path;
-  	return this._parentRoute ? this._parentRoute.getUrlFullMatch(urlPath) : "";
+  	return this._hostRoute ? this._hostRoute.getUrlFullMatch(urlPath) : "";
   };
 
   AppRouter.parseUrl = function(url) {
   	url = url != null ? url : window.location.href;
     return utilities.parseUrl(url, this.getAttribute('mode'));
+  };
+
+  AppRouter.createHref = function(href) {
+    var selfPath = utilities.normalizePath(this.getUrlFullMatch(), true, true);
+    return this.getGoPath(selfPath + href);
   };
 
   // Initialize the router
@@ -234,10 +292,7 @@
   //   replace: true
   // }
   AppRouter.go = function(path, options) {
-    if (this.getAttribute('mode') !== 'pushstate') {
-      // mode == auto or hash
-      path = '#' + path;
-    }
+    path = this.getGoPath(path);
     if (options && options.replace === true) {
       window.history.replaceState(null, null, path);
     } else {
@@ -265,6 +320,40 @@
       fallbackEvent.initCustomEvent('popstate', false, false, { state: {} });
       window.dispatchEvent(fallbackEvent);
     }
+  };
+
+  AppRouter.getGoPath = function(path) {
+    if (this.getAttribute('mode') !== 'pushstate') {
+      // mode == auto or hash
+      path = '#' + path;
+    }
+    return path;
+  };
+
+  AppRouterLink.attachedCallback = function() {
+    this._defineParentRoute();
+    this.recountHref();
+  };
+
+  AppRouterLink._defineParentRoute = function() {
+    var parentRoute;
+    var parents = utilities.getParents(this);
+    for (var i = 0; i < parents.length; i++) {
+      var parent = parents[i];
+      if (parent.tagName == "APP-ROUTE") {
+        parentRoute = parent;
+        break;
+      }
+    }
+
+    this._hostRoute = parentRoute;
+  };
+
+  AppRouterLink.recountHref = function() {
+    var href = this.getAttribute("href");
+    var parent = this._hostRoute.getUrlFullMatch();
+
+    this.fullHref = parent + href;
   };
 
   // fire(type, detail, node) - Fire a new CustomEvent(type, detail) on the node
@@ -318,7 +407,7 @@
   // Activate the route
   function activateRoute(router, route, url) {
     if (route.hasAttribute('redirect')) {
-      router.go(route.getAttribute('redirect'), {replace: true});
+      router.go(route.getRedirectUrl(url.path), {replace: true});
       return;
     }
 
@@ -798,18 +887,32 @@
     }
   };
 
-  utilities.normalizePath = function(urlPath, addTrailingSlash) {
+  utilities.normalizePath = function(urlPath, addTrailingSlash, addLeadingSlash) {
+    addLeadingSlash = addLeadingSlash !== false;
+    addTrailingSlash = addTrailingSlash === true;
+
     if (urlPath.substr(0, 1) === "/") {
-      urlPath = urlPath.substr(1);
+      if (!addLeadingSlash) {
+        urlPath = urlPath.substr(1);
+      }
+    } else {
+      if (addLeadingSlash) {
+        urlPath = "/" + urlPath;
+      }
     }
-    if (addTrailingSlash) {
-      if(urlPath.slice(-1) !== '/') {
+
+    if(urlPath.slice(-1) === '/') {
+      if (!addTrailingSlash) {
+        urlPath = urlPath.slice(0, -1);
+      }
+    } else {
+      if (addTrailingSlash) {
         urlPath += "/";
       }
     }
     return urlPath;
   };
 
-  window.__AppRouterConstructors = [AppRouter, AppRouteItem];
+  window.__AppRouterConstructors = [AppRouter, AppRouteItem, AppRouterLink];
 })(window, document);
 

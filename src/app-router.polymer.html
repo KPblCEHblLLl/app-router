@@ -1,12 +1,44 @@
 <script type="text/javascript" src="app-router.js"></script>
+<polymer-element name="app-router">
+  <script>
+    Polymer(window.__AppRouterConstructors[0]);
+  </script>
+</polymer-element>
+
 <polymer-element name="app-route">
   <script>
     Polymer(window.__AppRouterConstructors[1]);
   </script>
 </polymer-element>
 
-<polymer-element name="app-router">
+<polymer-element name="app-router-link" attributes="href">
   <script>
-    Polymer(window.__AppRouterConstructors[0]);
+    Polymer({
+      href: "",
+      computed: {
+        "fullHref": "hostRoute.currentUrl.path | getFullPath"
+      },
+      hostRoute: null,
+      attached: function() {
+        var parents = __AppRouterConstructors[0].util.getParents(this);
+        var hostRoute;
+        for (var i = 0; i < parents.length; i++) {
+          var parent = parents[i];
+          if (parent.tagName == "APP-ROUTE") {
+            hostRoute = parent;
+            break;
+          }
+        }
+
+        this.hostRoute = hostRoute;
+      },
+
+      getFullPath: function() {
+        return this.hostRoute && this.hostRoute.getLinkHref(this.href);
+      }
+    });
   </script>
+  <template>
+    <a _href="{{fullHref}}"><content></content></a>
+  </template>
 </polymer-element>

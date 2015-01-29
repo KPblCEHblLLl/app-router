@@ -10,3 +10,9 @@
     Polymer(window.__AppRouterConstructors[0]);
   </script>
 </polymer-element>
+<script>
+  PolymerExpressions.prototype.hrefForAppRouter = function(href) {
+    console.log(this, arguments);
+    //__AppRouterConstructors[0].util.getParents();
+  };
+</script>
