@@ -11,15 +11,32 @@
   </script>
 </polymer-element>
 
-<polymer-element name="app-router-link" attributes="href">
+<polymer-element name="app-router-link" attributes="href_">
+  <template>
+    <style>
+      a {
+        color: inherit;
+        text-decoration: inherit;
+      }
+    </style>
+    <a _href="{{fullHref}}"><content></content></a>
+  </template>
+
   <script>
     Polymer({
-      href: "",
+      href_: "",
       computed: {
         "fullHref": "hostRoute.currentUrl.path | getFullPath"
       },
       hostRoute: null,
       attached: function() {
+        this._defineRouter();
+      },
+      ready: function() {
+        this._defineRouter();
+      },
+
+      _defineRouter: function() {
         var parents = __AppRouterConstructors[0].util.getParents(this);
         var hostRoute;
         for (var i = 0; i < parents.length; i++) {
@@ -34,11 +51,8 @@
       },
 
       getFullPath: function() {
-        return this.hostRoute && this.hostRoute.getLinkHref(this.href);
+        return this.hostRoute && this.hostRoute.getLinkHref(this.href_);
       }
     });
   </script>
-  <template>
-    <a _href="{{fullHref}}"><content></content></a>
-  </template>
 </polymer-element>

@@ -125,11 +125,12 @@
       router = this.getBaseRouter();
       href = href.substr(1);
     } else if (href.substr(0, 2) === "./" || href.substr(0, 3) === "../") {
-      var split = href.match(/^((\.\/|\.\.\/)*)(.+)$/);
+      var split = href.match(/^((\.\/|\.\.\/)*)(.*)$/);
       href = split[3];
       var routeShift = split[1];
       router = this.getRouterByHref(routeShift);
     } else {
+      href = utilities.normalizePath(this.getUrlFullMatch(), true, false) + href;
       router = this.parentRouter;
     }
 
