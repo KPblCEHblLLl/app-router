@@ -11,7 +11,7 @@
     "polymer",
     "x-tag"
   ],
-  "main": "app-router.html",
+  "main": "app-router.polymer.html",
   "license": "MIT",
   "homepage": "https://github.com/erikringsmuth/app-router",
   "ignore": [
