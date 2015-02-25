@@ -407,11 +407,6 @@
 
   // Activate the route
   function activateRoute(router, route, url) {
-    if (route.hasAttribute('redirect')) {
-      router.go(route.getRedirectUrl(url.path), {replace: true});
-      return;
-    }
-
     if (router.activeRoute == route) {
       var oldUrl = route.currentUrl;
        if (route.getUrlFullMatch(oldUrl.path) == route.getUrlFullMatch(url.path)){
@@ -428,6 +423,11 @@
       return;
     }
     if (!fire('activate-route-start', eventDetail, route)) {
+      return;
+    }
+
+    if (route.hasAttribute('redirect')) {
+      router.go(route.getRedirectUrl(url.path), {replace: true});
       return;
     }
 
