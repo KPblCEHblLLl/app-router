@@ -326,7 +326,9 @@
   AppRouter.getGoPath = function(path) {
     if (this.getAttribute('mode') !== 'pushstate') {
       // mode == auto or hash
-      path = '#' + path;
+      if (path.substr(0, 1) != "#") {
+        path = '#' + path;
+      }
     }
     return path;
   };
@@ -355,6 +357,10 @@
     var parent = this._hostRoute.getUrlFullMatch();
 
     this.fullHref = parent + href;
+  };
+
+  AppRouterLink.go = function() {
+  	this._hostRoute.parentRouter.go(this.fullHref);
   };
 
   // fire(type, detail, node) - Fire a new CustomEvent(type, detail) on the node
@@ -407,6 +413,7 @@
 
   // Activate the route
   function activateRoute(router, route, url) {
+    console.log(url);
     if (router.activeRoute == route) {
       var oldUrl = route.currentUrl;
        if (route.getUrlFullMatch(oldUrl.path) == route.getUrlFullMatch(url.path)){
@@ -435,12 +442,15 @@
     route.model = model;
     // Update model instead of re-rendering if we're on the same route
     if (router.activeRoute && router.activeRoute === route && route.firstElementChild) {
+      console.log(route);
+      console.log(route.firstElementChild);
       if (route.hasAttribute('element')) {
         for (var property in model) {
           if (model.hasOwnProperty(property)) {
             route.firstElementChild[property] = model[property];
           }
         }
+        router.activeRoute.currentUrl = url;
         return;
       }
     }

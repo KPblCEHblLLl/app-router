@@ -14,6 +14,11 @@ gulp.task('lint', function() {
     .pipe(jshint.reporter('jshint-stylish'));
 });
 
+gulp.task('copy', function() {
+  return gulp.src('src/app-router.js')
+    .pipe(gulp.dest('.'));
+});
+
 gulp.task('build', function() {
   return gulp.src('src/app-router.js')
     .pipe(uglify({

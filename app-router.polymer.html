@@ -52,6 +52,10 @@
 
       getFullPath: function() {
         return this.hostRoute && this.hostRoute.getLinkHref(this.href_);
+      },
+
+      go: function() {
+        this.hostRoute.parentRouter.go(this.getFullPath());
       }
     });
   </script>
