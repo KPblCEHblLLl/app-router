@@ -413,7 +413,6 @@
 
   // Activate the route
   function activateRoute(router, route, url) {
-    console.log(url);
     if (router.activeRoute == route) {
       var oldUrl = route.currentUrl;
        if (route.getUrlFullMatch(oldUrl.path) == route.getUrlFullMatch(url.path)){
@@ -442,8 +441,6 @@
     route.model = model;
     // Update model instead of re-rendering if we're on the same route
     if (router.activeRoute && router.activeRoute === route && route.firstElementChild) {
-      console.log(route);
-      console.log(route.firstElementChild);
       if (route.hasAttribute('element')) {
         for (var property in model) {
           if (model.hasOwnProperty(property)) {
