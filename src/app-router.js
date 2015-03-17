@@ -895,6 +895,28 @@
     }
   };
 
+  utilities.getHostRoute = function(el) {
+    var parents = utilities.getParents(el);
+    for (var i = 0; i < parents.length; i++) {
+      var parent = parents[i];
+      if (parent.tagName == "APP-ROUTE") {
+        return parent;
+      }
+    }
+    return null;
+  };
+
+  utilities.getHostRouter = function(el) {
+    var parents = utilities.getParents(el);
+    for (var i = 0; i < parents.length; i++) {
+      var parent = parents[i];
+      if (parent.tagName == "APP-ROUTER") {
+        return parent;
+      }
+    }
+    return null;
+  };
+
   utilities.normalizePath = function(urlPath, addTrailingSlash, addLeadingSlash) {
     addLeadingSlash = addLeadingSlash !== false;
     addTrailingSlash = addTrailingSlash === true;
