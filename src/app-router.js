@@ -294,6 +294,9 @@
   // }
   AppRouter.go = function(path, options) {
     path = this.getGoPath(path);
+    if (location.hash === path) {
+      return;
+    }
     if (options && options.replace === true) {
       window.history.replaceState(null, null, path);
     } else {
@@ -415,7 +418,8 @@
   function activateRoute(router, route, url) {
     if (router.activeRoute == route) {
       var oldUrl = route.currentUrl;
-       if (route.getUrlFullMatch(oldUrl.path) == route.getUrlFullMatch(url.path)){
+       if (route.getUrlFullMatch(oldUrl.path) == route.getUrlFullMatch(url.path) &&
+          oldUrl.search == url.search){
          return;
        }
     }
