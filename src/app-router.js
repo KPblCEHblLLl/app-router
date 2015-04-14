@@ -12,7 +12,6 @@
   // <app-route path="/path" [import="/page/cust-el.html"] [element="cust-el"] [template]></app-route>
   var AppRouteItem = Object.create(HTMLElement.prototype);
 
-  // <app-route path="/path" [import="/page/cust-el.html"] [element="cust-el"] [template]></app-route>
   var AppRouterLink = Object.create(HTMLElement.prototype);
 
   AppRouteItem.attachedCallback = function() {
@@ -475,7 +474,15 @@
     }
     // pre-loaded custom element
     else if (route.hasAttribute('element')) {
-      activateCustomElement(router, route.getAttribute('element'), route, url, eventDetail);
+      var elementName = route.getAttribute('element');
+      if (window.mpWeb) {
+        window.mpWeb.import(elementName, route.getAttribute('directory'))
+          .done(function() {
+            activateCustomElement(router, elementName, route, url, eventDetail);
+          });
+      } else {
+        activateCustomElement(router, route.getAttribute('element'), route, url, eventDetail);
+      }
     }
     // inline template
     else if (route.firstElementChild && route.firstElementChild.tagName === 'TEMPLATE') {
