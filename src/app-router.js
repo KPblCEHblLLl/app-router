@@ -445,11 +445,13 @@
     // Update model instead of re-rendering if we're on the same route
     if (router.activeRoute && router.activeRoute === route && route.firstElementChild) {
       if (route.hasAttribute('element')) {
+        var el = route.firstElementChild;
         for (var property in model) {
           if (model.hasOwnProperty(property)) {
-            route.firstElementChild[property] = model[property];
+            el[property] = model[property];
           }
         }
+        el.fire && el.fire("app-route-model-change", model);
         router.activeRoute.currentUrl = url;
         return;
       }
