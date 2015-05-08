@@ -478,7 +478,7 @@
     else if (route.hasAttribute('element')) {
       var elementName = route.getAttribute('element');
       if (window.mpWeb) {
-        window.mpWeb.import(elementName, route.getAttribute('directory'))
+        window.mpWeb.import(elementName)
           .done(function() {
             activateCustomElement(router, elementName, route, url, eventDetail);
           });
