@@ -4,6 +4,7 @@
   var importedURIs = {};
   var isIE = 'ActiveXObject' in window;
   var previousUrl = {};
+  var pageBaseTitle = "";
 
   // <app-router [init="auto|manual"] [mode="auto|hash|pushstate"] [trailingSlash="strict|ignore"] [shadow]></app-router>
   var AppRouter = Object.create(HTMLElement.prototype);
@@ -438,6 +439,16 @@
     if (route.hasAttribute('redirect')) {
       router.go(route.getRedirectUrl(url.path), {replace: true});
       return;
+    }
+
+    var title = route.getAttribute("page-title");
+    if (title) {
+      if (!pageBaseTitle) {
+        pageBaseTitle = document.title;
+      }
+      document.title = title;
+    } else {
+      document.title = pageBaseTitle || document.title;
     }
 
     var model = createModel(router, route, url, eventDetail);
