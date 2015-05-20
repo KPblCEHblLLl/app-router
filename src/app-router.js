@@ -7,13 +7,13 @@
   var pageBaseTitle = "";
 
   // <app-router [init="auto|manual"] [mode="auto|hash|pushstate"] [trailingSlash="strict|ignore"] [shadow]></app-router>
-  var AppRouter = Object.create(HTMLElement.prototype);
+  var AppRouter = {};
   AppRouter.util = utilities;
 
   // <app-route path="/path" [import="/page/cust-el.html"] [element="cust-el"] [template]></app-route>
-  var AppRouteItem = Object.create(HTMLElement.prototype);
+  var AppRouteItem = {};
 
-  var AppRouterLink = Object.create(HTMLElement.prototype);
+  var AppRouterLink = {};
 
   AppRouteItem.attached = function() {
     console.log("AppRouteItem", this);
