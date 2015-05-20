@@ -16,6 +16,7 @@
   var AppRouterLink = Object.create(HTMLElement.prototype);
 
   AppRouteItem.attachedCallback = function() {
+    console.log("AppRouteItem", this);
     this._defineParentRouter();
   };
 
@@ -164,6 +165,7 @@
 
   // Initial set up when attached
   AppRouter.attachedCallback = function() {
+    console.log("AppRouter", this);
     this._defineParentRoute();
     // init="auto|manual"
     if(this.getAttribute('init') !== 'manual') {
@@ -337,6 +339,7 @@
   };
 
   AppRouterLink.attachedCallback = function() {
+    console.log("AppRouterLink", this);
     this._defineParentRoute();
     this.recountHref();
   };
