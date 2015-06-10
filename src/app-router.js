@@ -16,7 +16,6 @@
   var AppRouterLink = {};
 
   AppRouteItem.attached = function() {
-    console.log("AppRouteItem", this);
     this._defineParentRouter();
   };
 
@@ -165,7 +164,6 @@
 
   // Initial set up when attached
   AppRouter.attached = function() {
-    console.log("AppRouter", this);
     this._defineParentRoute();
     // init="auto|manual"
     if(this.getAttribute('init') !== 'manual') {
@@ -339,7 +337,6 @@
   };
 
   AppRouterLink.attached = function() {
-    console.log("AppRouterLink", this);
     this._defineParentRoute();
     this.recountHref();
   };
